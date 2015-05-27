@@ -49,43 +49,43 @@ void loop()
 {
 // ВЫЧИСЛЕНИЕ ДИСТАНЦИИ РАЗ В timeOutRange раз
 
-	if ((millis() - timerRange) > timeOutRange) // 1. вычисление дистанции раз в timeOutRange
-	{ 
-	  prevRange = nowRange; // память предыдущего значения дистанции
-	  nowRange = getRange(); // текущее значение дистанции
-	  timerRange = millis(); // сброс таймера интервала вычисления дистанции
+  if ((millis() - timerRange) > timeOutRange) // 1. вычисление дистанции раз в timeOutRange
+  { 
+    prevRange = nowRange; // память предыдущего значения дистанции
+    nowRange = getRange(); // текущее значение дистанции
+    timerRange = millis(); // сброс таймера интервала вычисления дистанции
 
-	  Serial.print("Range: ");
-	  Serial.println(nowRange);
-	}
+    Serial.print("Range: ");
+    Serial.println(nowRange);
+  }
 
 
 // Если дистанция в допустимых пределах
 
-	if ((nowRange < bottomRange - delta) && (nowRange > topRange+delta))
-	{
-		if (nowRange > bottomRange - delta)
-			valueRGB = 0;
-		else
-			valueRGB = 254 - map(nowRange, topRange, bottomRange, 0, 254); // приведение текущего значения к диапазону 0 - 254 и "переворот" 
+  if ((nowRange < bottomRange - delta) && (nowRange > topRange+delta))
+  {
+    if (nowRange > bottomRange - delta)
+      valueRGB = 0;
+    else
+      valueRGB = 254 - map(nowRange, topRange, bottomRange, 0, 254); // приведение текущего значения к диапазону 0 - 254 и "переворот" 
 
-		timeSec = counter(); // сколько рука была над датчиком
+    timeSec = counter(); // сколько рука была над датчиком
 
-		if (timeSec>=timeout)
-		{
+    if (timeSec>=timeout)
+    {
     //  Serial.print("timesec:"); Serial.println(timeSec);
     //  Serial.print("timeout:"); Serial.println(timeout);
-			setColor(0, 0, 0);
-			delay(timeOutHand); // чтобы успеть убрать руку
-		}
-		else
-			testLED();
-				
+      setColor(0, 0, 0);
+      delay(timeOutHand); // чтобы успеть убрать руку
+    }
+    else
+      testLED();
+        
 
-	  //	Serial.print("valueRGB: ");
-  	//	Serial.println(valueRGB);
+    //  Serial.print("valueRGB: ");
+    //  Serial.println(valueRGB);
   }
-	// Serial.println("PZDC");
+  // Serial.println("PZDC");
 
 } // loop{...}
 
@@ -94,14 +94,14 @@ void loop()
 // #1. Вычисление дистанции
   unsigned int getRange()
   {
-	  byte i;
-	  unsigned int rangeFinder = 0;
+    byte i;
+    unsigned int rangeFinder = 0;
 
-	  for (i = 0; i < 100; i++)
-	    rangeFinder = rangeFinder + analogRead(rangePin);
-	  
-	  rangeFinder = rangeFinder/100;
-	  return rangeFinder;
+    for (i = 0; i < 100; i++)
+      rangeFinder = rangeFinder + analogRead(rangePin);
+    
+    rangeFinder = rangeFinder/100;
+    return rangeFinder;
   }
 
 // #2. Установка цвета
@@ -132,16 +132,16 @@ void loop()
     topR = topR/i; // среднее арифметическое
     if (topR>250) // если верхний предел слишком мал
     {
-    	setColor(255,0,0); // то лучше переставить лампу в другое место
-    	delay(100);
-    	setColor(0, 0, 0);
-    	delay(100);
-    	setColor(255,0,0); // то лучше переставить лампу в другое место
-    	delay(100);
-    	setColor(0, 0, 0);
-    	delay(100);
-    	setColor(255,0,0); // то лучше переставить лампу в другое место
-    	delay(800);
+      setColor(255,0,0); // то лучше переставить лампу в другое место
+      delay(100);
+      setColor(0, 0, 0);
+      delay(100);
+      setColor(255,0,0); // то лучше переставить лампу в другое место
+      delay(100);
+      setColor(0, 0, 0);
+      delay(100);
+      setColor(255,0,0); // то лучше переставить лампу в другое место
+      delay(800);
     }
     else // если все хорошо :)
     {
@@ -166,20 +166,20 @@ void loop()
 // #4. lightMode - Виды работ лампы
   void lightMode(byte lmNum)
   {
-  	if (lmNum == 1) // светильник
-  		setColor(146,219,206); // чистый белый цвет
+    if (lmNum == 1) // светильник
+      setColor(146,219,206); // чистый белый цвет
   }
 
 // #5temp. Тест LED
-	void testLED()
-	{
-	byte a, b, c;
-		a=random(256);
-		b=random(256);
-	  c=random(256);
-		setColor (a, b, c);
-	delay(500);
-	}
+  void testLED()
+  {
+  byte a, b, c;
+    a=random(256);
+    b=random(256);
+    c=random(256);
+    setColor (a, b, c);
+  delay(500);
+  }
 
 // #6. Нечто напоминающее таймер
   //     3.7 cекунд = 100 итераций -> 1 секунда = 27 итераций
@@ -188,34 +188,33 @@ void loop()
      int iCount=0;
      while ((nowRange <= getRange()+40) && (nowRange>=getRange()-40)) // если руку подвели
      {
-     	if ((getRange() <= topRange+delta) && (getRange() >= topRange - delta)) // если рука убрана
-     			return iCount;
+      if ((getRange() <= topRange+delta) && (getRange() >= topRange - delta)) // если рука убрана
+          return iCount;
 
-     	iCount++; // +1
+      iCount++; // +1
 
-     	if (iCount >= timeout) // если время дошло до выключения светильника
-     		return iCount; 
+      if (iCount >= timeout) // если время дошло до выключения светильника
+        return iCount; 
 
-     	Serial.print("iCount="); Serial.println(iCount);    
+      Serial.print("iCount="); Serial.println(iCount);    
      }
      return iCount;
   }
 
 // #7. Первое включение
-void firstOn() // "плавно" увеличиваем яркость
-{
+  void firstOn() // "плавно" увеличиваем яркость
+  {
   int force;
-  for (force=0; force<=253; force+=2)
+  for (force=0; force<=253; force+=2) // потому что переполнение и лента "вырубается"
   {
     if (force>80)
       force++;
     if (force>150)
       force++;
     setColor(force, force, force);
-    Serial.print("force"); Serial.println(force);
+    //Serial.print("force"); Serial.println(force);
     delay(30); // TODO переделать в прерывания
   }
-}
-
+  }
 
 
