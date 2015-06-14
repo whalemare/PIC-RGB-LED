@@ -26,7 +26,8 @@
 
   int testCount;
 
-  void setup() { 
+  void setup() 
+  { 
     Serial.begin(9600); // для отладки
     pinMode(rangePin, INPUT); // шарп на вход
     pinMode(redPin, OUTPUT); // redPin на выход
@@ -43,7 +44,6 @@
   void loop()
   {
   // ВЫЧИСЛЕНИЕ ДИСТАНЦИИ РАЗ В timeOutRange раз (+)
-
     if ((millis() - timerRange) > 10) // 1. вычисление дистанции раз в timeOutRange
     { 
       prevRange = nowRange; // память предыдущего значения дистанции
@@ -53,62 +53,64 @@
       println("Range: ", nowRange);
     }
 
-
-
   // Если дистанция в допустимых пределах [bottomRange; topRange]
     if ((nowRange < bottomRange - delta) && (nowRange > topRange+delta))
     {
 
-    // Для valueRGB: 58-66 строки
-      if (nowRange > bottomRange - delta)
-        valueRGB = 0;
-      else{
-        if (prevValueRGB==0)
-          prevValueRGB = 255;
-        else
-          prevValueRGB = valueRGB;
-        valueRGB = 254 - map(nowRange, topRange, bottomRange, 0, 254); // приведение текущего значения к диапазону 0 - 254 и "переворот" 
-      }
+      /*
 
-    /*
-            Serial.print("prevRGB: ");
-            Serial.println(prevValueRGB);
+        // Для valueRGB: 58-66 строки
+          if (nowRange > bottomRange - delta)
+            valueRGB = 0;
+          else{
+            if (prevValueRGB==0)
+              prevValueRGB = 255;
+            else
+              prevValueRGB = valueRGB;
+            valueRGB = 254 - map(nowRange, topRange, bottomRange, 0, 254); // приведение текущего значения к диапазону 0 - 254 и "переворот" 
+          }
 
-            Serial.print("valueRGB: ");
-            Serial.println(valueRGB);
-    */
+        
+                Serial.print("prevRGB: ");
+                Serial.println(prevValueRGB);
+
+                Serial.print("valueRGB: ");
+                Serial.println(valueRGB);
+      */
 
       timeSec = counter(); // сколько рука была над датчиком
 
       if (lmNum==0) // если лампа выключена
-        if (timeSec>=3) // проведи рукой, чтобы ее включить
+        if (timeSec>=1) // проведи рукой, чтобы ее включить
           firstOn();
     }
 
   // Если дистанция в пределах [topRange+5; 120+5]; 
-  if ((nowRange < topRange-10) && (nowRange > maxRange+10)) // ? будет ли верно работать, если над датчиком нет никаких препятсвий и range = topRange+-
-  {
-    upTempTange = nowRange;
-
-  // Для включения радуги
-    if (lmNum==1) // если работает светильник
+    if ((nowRange < topRange-10) && (nowRange > maxRange+10)) // ? будет ли верно работать, если над датчиком нет никаких препятсвий и range = topRange+-
     {
-      delay(500); 
-      if ((getRange() <= upTempTange+20) && (getRange() >= upTempTange-20)) // если рука не сдвинулась за полсекунды
-      {
-        println("RADUGA", 0);
-        lightMode(2); // режим радуги
-      }
-      else
-      {
-        println("Hand sdvinulas, menyaem yarkost", 0);
-        setColor(nowRange, 200, 50);
-      }
+        upTempTange = nowRange;
+        println("We are in [topRange+5; 120+5]", 0);
+      // Для включения радуги
+        if (lmNum==1) // если работает светильник
+        {
+          delay(1000); 
+          if ((getRange() <= upTempTange+20) && (getRange() >= upTempTange-20)) // если рука не сдвинулась за секунду
+          {
+            println("RADUGA", 0);
+            lightMode(2); // режим радуги
+          }
+          else // иначе, если рука сдвинулась
+          {
+            println("Hand sdvinulas, menyaem yarkost", 0);
+            setColor(255, 34, 111);
+           // brightness();
+
+          }
+        }
+
+      // Для изменения яркости
+
     }
-
-  // Для изменения яркости
-
-  }
 
   } // loop{...}
 
@@ -182,7 +184,7 @@
           break;
         case 2: // помигать светодиодиком
         lmNum = 2;
-          testLED();
+          rainbowing();
           break;
         case 0: // выключение светильника
           lmNum = 0; // для индикации в других частях программы
@@ -270,6 +272,82 @@
           Serial.println(number);
       else
           Serial.println();
+    }
+
+/* почти работает. Осталось прикрутить смену яркости ко всем цветам
+    и сделать запоминание выбранной яркости
+  // #9. Cмена яркости
+    void brightness()
+    {
+      boolean exiting = false;
+      do {
+       if ((millis() - timerRange) > 10) // 1. вычисление дистанции раз в timeOutRange
+          { 
+           prevRange = nowRange; // память предыдущего значения дистанции
+           nowRange = getRange(); // текущее значение дистанции
+           timerRange = millis(); // сброс таймера интервала вычисления дистанции
+
+           println("Rangeing: ", nowRange);
+          }
+
+        if (nowRange==1 || nowRange==2 || nowRange == 3 || nowRange == 4)
+          exiting = true;
+
+        if (prevValueRGB==0)
+              prevValueRGB = 255;
+            else
+              prevValueRGB = valueRGB;
+        valueRGB = 254 - map(nowRange, 130, bottomRange-60, 0, 254); // приведение текущего значения к диапазону 0 - 254 и "переворот" 
+
+        Serial.print("9rkost: "); Serial.println(valueRGB);
+        setColor(valueRGB, 0, 0);  
+
+        } while (exiting !=true);
+    }
+*/
+
+  // #10. Радуга
+    int rainbowing()
+    {
+      lmNum = 2; // чтобы не конфликтовало с выключением лампы
+      byte timet;
+      byte rgbColour[3], fade;
+      boolean exx = false;
+      
+      for (fade=255; fade>0; fade--)  // плавно перейдем к красному цвету
+      {
+        setColor(255, fade, fade);
+        delay(20);
+        if (fade==1) // TODO костыль. fade всегда доходит только до 1, не нижее
+          setColor(0, 0, 0);
+      } 
+
+        // Начинаем с красного
+        rgbColour[0] = 255;
+        rgbColour[1] = 0;
+        rgbColour[2] = 0;  
+   
+       
+        // Choose the colours to increment and decrement.
+        for (int decColour = 0; decColour < 3; decColour += 1) 
+        {
+          int incColour = decColour == 2 ? 0 : decColour + 1;
+          
+          // cross-fade the two colours.
+          for(int i = 0; i < 255; i += 1) 
+          {
+            rgbColour[decColour] -= 1;
+            rgbColour[incColour] += 1;
+            
+            setColor(rgbColour[0], rgbColour[1], rgbColour[2]);
+            if (getRange() <= topRange-20)
+            {
+              lightMode(0);
+              return 0;
+            }
+            delay(50);
+          }
+        }          
     }
 
 
