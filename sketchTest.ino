@@ -1,5 +1,6 @@
   #define rangePin A0 // датчик препятствия Sharp
   #define bottomRange 620 // нижний предел 
+  #define maxRange 120 // верхний предел
   // верхний "нулевой" порог, (при отсутсвии препятсвия), высчитывается через функцию topDistance()
   #define delta 20 // стандартно возможное отклонение
   #define timeOutRange 100 // 1 считывание раз в timeOutRange мс
@@ -14,18 +15,19 @@
   int topRange; // верхний порог
   int i=0; // для счетчика
   int timeSec; // время руки над датчиком
+  int upTempTange=0; // для upTempTange = nowRange, для правильной работы в промежутке (topRange; maxRange)
 
   // lightMode переделана в функцию. Режим лампы в настоящий момент (0-ночник, 1 светильник, 2 радуга, 8 отключение)
   byte valueRGB = 0; // яркость или оттенок (нормализованное значение nowRange)
   byte timeout = 60; // итераций чтобы выключить светильник
   byte prevValueRGB = 0; // прошлое значение яркости 
   byte factor = 0; // для изменения яркости
-  byte lmNum = 1;
+  byte lmNum = 1; // лампа в режиме светильниа
 
   int testCount;
 
   void setup() { 
-    Serial.begin(9600);
+    Serial.begin(9600); // для отладки
     pinMode(rangePin, INPUT); // шарп на вход
     pinMode(redPin, OUTPUT); // redPin на выход
     pinMode(greenPin, OUTPUT); // greenPin на выход
@@ -51,22 +53,13 @@
       println("Range: ", nowRange);
     }
 
-  // Для включения радуги
-   if (lmNum==1 || lmNum==2) // если работает светильник
-   {
-     if (nowRange<=topRange-10) // если рука выше позиции, получаемой если нет препятствий
-       {
-           lightMode(2);
-            delay(100);
-       }
-
-   }
 
 
-  // Если дистанция в допустимых пределах
+  // Если дистанция в допустимых пределах [bottomRange; topRange]
     if ((nowRange < bottomRange - delta) && (nowRange > topRange+delta))
     {
-      // Для valueRGB: 58-66 строки
+
+    // Для valueRGB: 58-66 строки
       if (nowRange > bottomRange - delta)
         valueRGB = 0;
       else{
@@ -84,12 +77,38 @@
             Serial.print("valueRGB: ");
             Serial.println(valueRGB);
     */
+
       timeSec = counter(); // сколько рука была над датчиком
 
       if (lmNum==0) // если лампа выключена
         if (timeSec>=3) // проведи рукой, чтобы ее включить
           firstOn();
     }
+
+  // Если дистанция в пределах [topRange+5; 120+5]; 
+  if ((nowRange < topRange-10) && (nowRange > maxRange+10)) // ? будет ли верно работать, если над датчиком нет никаких препятсвий и range = topRange+-
+  {
+    upTempTange = nowRange;
+
+  // Для включения радуги
+    if (lmNum==1) // если работает светильник
+    {
+      delay(500); 
+      if ((getRange() <= upTempTange+20) && (getRange() >= upTempTange-20)) // если рука не сдвинулась за полсекунды
+      {
+        println("RADUGA", 0);
+        lightMode(2); // режим радуги
+      }
+      else
+      {
+        println("Hand sdvinulas, menyaem yarkost", 0);
+        setColor(nowRange, 200, 50);
+      }
+    }
+
+  // Для изменения яркости
+
+  }
 
   } // loop{...}
 
@@ -215,7 +234,7 @@
 
           iCount++; // +1
 
-          if (iCount >= timeout) // если время дошло до выключения светильника
+          if ((iCount >= timeout) && (lmNum!=0)) // если время дошло до выключения светильника
             {
               lightMode(0);
               iCount=0;
@@ -249,5 +268,8 @@
       Serial.print(text);
       if (number!=0)
           Serial.println(number);
+      else
+          Serial.println();
     }
+
 
