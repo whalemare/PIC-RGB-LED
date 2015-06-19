@@ -1,49 +1,49 @@
-  #define rangePin A0 // датчик препятствия Sharp
-  #define bottomRange 620 // нижний предел 
-  #define maxRange 120 // верхний предел
-  // верхний "нулевой" порог, (при отсутсвии препятсвия), высчитывается через функцию topDistance()
-  #define delta 20 // стандартно возможное отклонение
-  #define timeOutRange 100 // 1 считывание раз в timeOutRange мс
-  #define timeOutHand 1500 // задержка чтобы убрать руку мс
+#define rangePin A0 // датчик препятствия Sharp
+#define bottomRange 620 // нижний предел 
+#define maxRange 120 // верхний предел
+// верхний "нулевой" порог, (при отсутсвии препятсвия), высчитывается через функцию topDistance()
+#define delta 20 // стандартно возможное отклонение
+#define timeOutRange 100 // 1 считывание раз в timeOutRange мс
+#define timeOutHand 1500 // задержка чтобы убрать руку мс
 
-  #define redPin 9 // красный подключен к 9 пину
-  #define greenPin 10 // зеленый подключен к 10 пину
-  #define bluePin 11 // синий подключен к 11 пину
+#define redPin 9 // красный подключен к 9 пину
+#define greenPin 10 // зеленый подключен к 10 пину
+#define bluePin 11 // синий подключен к 11 пину
 
-  unsigned long timerRange, prevRange, nowRange; // переменные для вычисления расстояния
-  int redNum, greenNum, blueNum; // [0;255] значения цветов RGB
-  int topRange; // верхний порог
-  int i=0; // для счетчика
-  int timeSec; // время руки над датчиком
-  int upTempTange=0; // для upTempTange = nowRange, для правильной работы в промежутке (topRange; maxRange)
+unsigned long timerRange, prevRange, nowRange; // переменные для вычисления расстояния
+int redNum, greenNum, blueNum; // [0;255] значения цветов RGB
+int topRange; // верхний порог
+int i=0; // для счетчика
+int timeSec; // время руки над датчиком
+int upTempTange=0; // для upTempTange = nowRange, для правильной работы в промежутке (topRange; maxRange)
 
-  // lightMode переделана в функцию. Режим лампы в настоящий момент (0-ночник, 1 светильник, 2 радуга, 8 отключение)
-  byte valueRGB = 0; // яркость или оттенок (нормализованное значение nowRange)
-  byte timeout = 60; // итераций чтобы выключить светильник
-  byte prevValueRGB = 0; // прошлое значение яркости 
-  byte factor = 0; // для изменения яркости
-  byte lmNum = 1; // лампа в режиме светильниа
+// lightMode переделана в функцию. Режим лампы в настоящий момент (0-ночник, 1 светильник, 2 радуга, 8 отключение)
+byte valueRGB = 0; // яркость или оттенок (нормализованное значение nowRange)
+byte timeout = 60; // итераций чтобы выключить светильник
+byte prevValueRGB = 0; // прошлое значение яркости 
+byte factor = 0; // для изменения яркости
+byte lmNum = 1; // лампа в режиме светильниа
 
-  int testCount;
+int testCount;
 
-  void setup() 
-  { 
-    Serial.begin(9600); // для отладки
-    pinMode(rangePin, INPUT); // шарп на вход
-    pinMode(redPin, OUTPUT); // redPin на выход
-    pinMode(greenPin, OUTPUT); // greenPin на выход
-    pinMode(bluePin, OUTPUT); // bluePin на выход
+void setup() 
+{ 
+  Serial.begin(9600); // для отладки
+  pinMode(rangePin, INPUT); // шарп на вход
+  pinMode(redPin, OUTPUT); // redPin на выход
+  pinMode(greenPin, OUTPUT); // greenPin на выход
+  pinMode(bluePin, OUTPUT); // bluePin на выход
 
-    timerRange = millis(); // старт таймера на периодическое считывание дистанции
+  timerRange = millis(); // старт таймера на периодическое считывание дистанции
 
-    nowRange = getRange(); // первое вычисление дистанции
-    topRange = topDistance(); // вычисление верхнего порога
-    randomSeed(analogRead(0)); // для рандомайзера
-  }
+  nowRange = getRange(); // первое вычисление дистанции
+  topRange = topDistance(); // вычисление верхнего порога
+  randomSeed(analogRead(0)); // для рандомайзера
+}
 
-  void loop()
-  {
-  // ВЫЧИСЛЕНИЕ ДИСТАНЦИИ РАЗ В timeOutRange раз (+)
+void loop()
+{
+// ВЫЧИСЛЕНИЕ ДИСТАНЦИИ РАЗ В timeOutRange раз (+)
     if ((millis() - timerRange) > 10) // 1. вычисление дистанции раз в timeOutRange
     { 
       prevRange = nowRange; // память предыдущего значения дистанции
@@ -53,7 +53,7 @@
       println("Range: ", nowRange);
     }
 
-  // Если дистанция в допустимых пределах [bottomRange; topRange]
+// Если дистанция в допустимых пределах [bottomRange; topRange]
     if ((nowRange < bottomRange - delta) && (nowRange > topRange+delta))
     {
 
@@ -85,11 +85,11 @@
           firstOn();
     }
 
-  // Если дистанция в пределах [topRange+5; 120+5]; 
+// Если дистанция в пределах [topRange+5; maxRange(120)+5]; 
     if ((nowRange < topRange-10) && (nowRange > maxRange+10)) // ? будет ли верно работать, если над датчиком нет никаких препятсвий и range = topRange+-
     {
         upTempTange = nowRange;
-        println("We are in [topRange+5; 120+5]", 0);
+        println("We are in [topRange+5; maxRange(120)+5]", 0);
       // Для включения радуги
         if (lmNum==1) // если работает светильник
         {
@@ -112,167 +112,167 @@
 
     }
 
-  } // loop{...}
+} // loop{...}
 
-  // ФУНКЦИИ ---------------------------------------------------------------------
+// ФУНКЦИИ ---------------------------------------------------------------------
 
-  // #1. Вычисление дистанции
-    unsigned int getRange()
+// #1. Вычисление дистанции
+  unsigned int getRange()
+  {
+    byte i;
+    unsigned int rangeFinder = 0;
+
+    for (i = 0; i < 100; i++)
+      rangeFinder = rangeFinder + analogRead(rangePin);
+    
+    rangeFinder = rangeFinder/100;
+    return rangeFinder;
+  }
+
+// #2. Установка цвета
+  void setColor(int redNum, int greenNum, int blueNum)
+  {
+    analogWrite(redPin, redNum);
+    analogWrite(greenPin, greenNum);
+    analogWrite(bluePin, blueNum);
+      /*
+      Serial.println(redNum);
+      Serial.println(greenNum);
+      Serial.println(blueNum);
+      Serial.println();
+      */  
+  }
+
+// #3. Настройка верхнего порога c цветовой подсказкой об окончании
+  unsigned int topDistance()
+  {
+    int i, topR, redColor=255;
+    int *all = new int[topR];
+
+    Serial.println("PROCESSING...");
+    for (i=0; i<=20; i++) // 2100 мс
     {
-      byte i;
-      unsigned int rangeFinder = 0;
+    //  setColor(redColor, 207, 232); // устанавливаем цветовую подсказку
+      all[i]=getRange(); // массив с дистанциями
+      topR += all[i];
+    //  redColor = abs(redColor-15);
+    //    Serial.print("redColor: "); Serial.println(redColor);
+      delay(100);   
+    } 
 
-      for (i = 0; i < 100; i++)
-        rangeFinder = rangeFinder + analogRead(rangePin);
-      
-      rangeFinder = rangeFinder/100;
-      return rangeFinder;
+    topR = topR/i; // среднее арифметическое
+    if (topR>250) // если верхний предел слишком мал
+    {
+      for (i=0; i<=255; i++)
+        setColor(i, i, i);
     }
+    else // если все хорошо :)
+      firstOn(); // #7
 
-  // #2. Установка цвета
-    void setColor(int redNum, int greenNum, int blueNum)
+    Serial.print("topRange: "); Serial.println(topR);
+    return topR;
+  }
+
+// #4. lightMode - Виды работ лампы
+  void lightMode(int number)
+  {
+    int fade; // для затухания в режиме 0
+    switch(number) 
     {
-      analogWrite(redPin, redNum);
-      analogWrite(greenPin, greenNum);
-      analogWrite(bluePin, blueNum);
+      case 1: // включен светильник
+        lmNum = 1;
+        break;
+      case 2: // помигать светодиодиком
+      lmNum = 2;
+        rainbowing();
+        break;
+      case 0: // выключение светильника
+        lmNum = 0; // для индикации в других частях программы
         /*
-        Serial.println(redNum);
-        Serial.println(greenNum);
-        Serial.println(blueNum);
-        Serial.println();
-        */  
+        TODO если включен не белый цвет, то перед выключением буратинка перекинет цвета в белый
+        и только потом начнется затухание. Сделать, чтобы затухание работало для всех цветов
+        */
+        for (fade=255; fade>0; fade--)
+        {
+          setColor(fade, fade, fade);
+          delay(20);
+          if (fade==1) // TODO костыль. fade всегда доходит только до 1, не нижее
+            setColor(0, 0, 0);
+        }
+        delay(2000);
+        break;
+      default: // если что то пошло не так
+        setColor(255, 0, 0);
+        delay(200);
+        setColor(0, 255, 0);
+        delay(159);
+        setColor(0, 0, 255);
+        delay(200);
+        setColor(0, 0, 0);
+        break;
     }
+  }
 
-  // #3. Настройка верхнего порога c цветовой подсказкой об окончании
-    unsigned int topDistance()
-    {
-      int i, topR, redColor=255;
-      int *all = new int[topR];
+// #5temp. Тест LED
+  void testLED()
+  {
+    byte a, b, c;
+      a=random(256);
+      b=random(256);
+      c=random(256);
+      setColor (a, b, c);
+    delay(500);
+  }
 
-      Serial.println("PROCESSING...");
-      for (i=0; i<=20; i++) // 2100 мс
-      {
-      //  setColor(redColor, 207, 232); // устанавливаем цветовую подсказку
-        all[i]=getRange(); // массив с дистанциями
-        topR += all[i];
-      //  redColor = abs(redColor-15);
-      //    Serial.print("redColor: "); Serial.println(redColor);
-        delay(100);   
-      } 
+// #6. Нечто напоминающее таймер
+  //     3.7 cекунд = 100 итераций -> 1 секунда = 27 итераций
+  int counter()
+  {
+     int iCount=0;
+     while ((nowRange <= getRange()+40) && (nowRange>=getRange()-40)) // если руку подвели
+     {
+        if ((getRange() <= topRange+delta) && (getRange() >= topRange - delta)) // если рука убрана
+            return iCount;
 
-      topR = topR/i; // среднее арифметическое
-      if (topR>250) // если верхний предел слишком мал
-      {
-        for (i=0; i<=255; i++)
-          setColor(i, i, i);
-      }
-      else // если все хорошо :)
-        firstOn(); // #7
+        iCount++; // +1
 
-      Serial.print("topRange: "); Serial.println(topR);
-      return topR;
-    }
-
-  // #4. lightMode - Виды работ лампы
-    void lightMode(int number)
-    {
-      int fade; // для затухания в режиме 0
-      switch(number) 
-      {
-        case 1: // включен светильник
-          lmNum = 1;
-          break;
-        case 2: // помигать светодиодиком
-        lmNum = 2;
-          rainbowing();
-          break;
-        case 0: // выключение светильника
-          lmNum = 0; // для индикации в других частях программы
-          /*
-          TODO если включен не белый цвет, то перед выключением буратинка перекинет цвета в белый
-          и только потом начнется затухание. Сделать, чтобы затухание работало для всех цветов
-          */
-          for (fade=255; fade>0; fade--)
+        if ((iCount >= timeout) && (lmNum!=0)) // если время дошло до выключения светильника
           {
-            setColor(fade, fade, fade);
-            delay(20);
-            if (fade==1) // TODO костыль. fade всегда доходит только до 1, не нижее
-              setColor(0, 0, 0);
+            lightMode(0);
+            iCount=0;
+            break;
           }
-          delay(2000);
-          break;
-        default: // если что то пошло не так
-          setColor(255, 0, 0);
-          delay(200);
-          setColor(0, 255, 0);
-          delay(159);
-          setColor(0, 0, 255);
-          delay(200);
-          setColor(0, 0, 0);
-          break;
-      }
-    }
+        Serial.print("iCount="); Serial.println(iCount);    
+     }
+     return iCount;
+  }
 
-  // #5temp. Тест LED
-    void testLED()
+// #7. Первое включение
+  void firstOn()
+  {
+    int force;
+    for (force=0; force<=253; force+=2) // потому что переполнение и лента "вырубается"
     {
-      byte a, b, c;
-        a=random(256);
-        b=random(256);
-        c=random(256);
-        setColor (a, b, c);
-      delay(500);
+      if (force>80)
+        force++;
+      if (force>150)
+        force++;
+      setColor(force, force, force);
+      //Serial.print("force"); Serial.println(force);
+      delay(30); // TODO переделать в прерывания
     }
+    lightMode(1); // мод светильника #4.
+  }
 
-  // #6. Нечто напоминающее таймер
-    //     3.7 cекунд = 100 итераций -> 1 секунда = 27 итераций
-    int counter()
-    {
-       int iCount=0;
-       while ((nowRange <= getRange()+40) && (nowRange>=getRange()-40)) // если руку подвели
-       {
-          if ((getRange() <= topRange+delta) && (getRange() >= topRange - delta)) // если рука убрана
-              return iCount;
-
-          iCount++; // +1
-
-          if ((iCount >= timeout) && (lmNum!=0)) // если время дошло до выключения светильника
-            {
-              lightMode(0);
-              iCount=0;
-              break;
-            }
-          Serial.print("iCount="); Serial.println(iCount);    
-       }
-       return iCount;
-    }
-
-  // #7. Первое включение
-    void firstOn()
-    {
-      int force;
-      for (force=0; force<=253; force+=2) // потому что переполнение и лента "вырубается"
-      {
-        if (force>80)
-          force++;
-        if (force>150)
-          force++;
-        setColor(force, force, force);
-        //Serial.print("force"); Serial.println(force);
-        delay(30); // TODO переделать в прерывания
-      }
-      lightMode(1); // мод светильника #4.
-    }
-
-  // #8. Для удобной печати
-    void println(char text[60], int number)
-    {
-      Serial.print(text);
-      if (number!=0)
-          Serial.println(number);
-      else
-          Serial.println();
-    }
+// #8. Для удобной печати
+  void println(char text[60], int number)
+  {
+    Serial.print(text);
+    if (number!=0)
+        Serial.println(number);
+    else
+        Serial.println();
+  }
 
 /* почти работает. Осталось прикрутить смену яркости ко всем цветам
     и сделать запоминание выбранной яркости
@@ -306,22 +306,24 @@
     }
 */
 
-  // #10. Радуга
-    int rainbowing()
+// #10. Радуга
+  int rainbowing()
+  {
+    lmNum = 2; // чтобы не конфликтовало с выключением лампы
+	int center;
+    byte rgbColour[3], fade;
+    boolean exx = false;
+    
+    for (fade=255; fade>0; fade--)  // плавно перейдем к красному цвету
     {
-      lmNum = 2; // чтобы не конфликтовало с выключением лампы
-      byte timet;
-      byte rgbColour[3], fade;
-      boolean exx = false;
-      
-      for (fade=255; fade>0; fade--)  // плавно перейдем к красному цвету
-      {
-        setColor(255, fade, fade);
-        delay(20);
-        if (fade==1) // TODO костыль. fade всегда доходит только до 1, не нижее
-          setColor(0, 0, 0);
-      } 
+      setColor(255, fade, fade);
+      delay(20);
+      if (fade==1) // TODO костыль. fade всегда доходит только до 1, не нижее
+        setColor(0, 0, 0);
+    } 
 
+    while (exx==false) // пока рак на горе не свиснет
+    {
         // Начинаем с красного
         rgbColour[0] = 255;
         rgbColour[1] = 0;
@@ -338,16 +340,45 @@
           {
             rgbColour[decColour] -= 1;
             rgbColour[incColour] += 1;
-            
             setColor(rgbColour[0], rgbColour[1], rgbColour[2]);
+
             if (getRange() <= topRange-20)
             {
-              lightMode(0);
-              return 0;
+              	// возвращаемся к белому цвету
+              	println("Go to the white", 0);
+              	while (exx == false)
+              	{
+	           	    println("0:", rgbColour[0]);
+              		println("1:", rgbColour[1]);
+              		println("2:", rgbColour[2]);
+								// TODO переделать в цикл
+              		if (rgbColour[0]!=255)
+              			rgbColour[0]++;
+
+              		if (rgbColour[1]!=255)
+              			rgbColour[1]++;
+
+              		if (rgbColour[2]!=255)
+              			rgbColour[2]++;
+              					//
+              		setColor(rgbColour[0], rgbColour[1], rgbColour[2]);
+              		delay(40);
+
+	                if ((rgbColour[0] == 255) && (rgbColour[1] == 255) && (rgbColour[2] == 255))
+	          		{
+	          			lightMode(1); // индикатор Включенной лампы
+					    exx == true;
+				        return 0;
+	            	}
+
+          		}
+
             }
             delay(50);
           }
-        }          
-    }
+        }
+    }          
+  }
+
 
 
