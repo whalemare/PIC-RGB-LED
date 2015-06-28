@@ -23,6 +23,8 @@ byte timeout = 60; // итераций чтобы выключить свети�
 byte prevValueRGB = 0; // прошлое значение яркости 
 byte factor = 0; // для изменения яркости
 byte lmNum = 1; // лампа в режиме светильниа
+byte r = 255; // для смены яркости в диапазоне радуги
+byte rdd; // для проверки значения красного цвета
 
 int testCount;
 
@@ -102,7 +104,32 @@ void loop()
           else // иначе, если рука сдвинулась
           {
             println("Hand sdvinulas, menyaem yarkost", 0);
-            setColor(255, 34, 111);
+            // если рука сдвинулась вниз, то уменьшить яркость
+            if (getRange() > upTempTange+50)
+            {
+            	/* // TODO СДЕЛАТЬ нормальную смену яркости
+            	bool exx = false;
+            	while (exx == false)
+            	{
+	            	delay(100);
+	            	for (int i=r; i>=r-30; i--)
+	            	{
+	            		if (rdd>30)
+	            		{
+	            			setColor(i, i, i);
+	            			delay(30);
+	            		}
+	            		else
+	            			setColor(rdd, rdd, rdd);
+	            	}
+
+	            	r=i;
+            		exx == true;
+            	}
+            	*/
+            	setColor(89, 139, 99);
+            }
+
            // brightness();
 
           }
@@ -132,6 +159,7 @@ void loop()
 // #2. Установка цвета
   void setColor(int redNum, int greenNum, int blueNum)
   {
+  	rdd=redNum;
     analogWrite(redPin, redNum);
     analogWrite(greenPin, greenNum);
     analogWrite(bluePin, blueNum);
@@ -313,11 +341,22 @@ void loop()
 	int center;
     byte rgbColour[3], fade;
     boolean exx = false;
-    
-    for (fade=255; fade>0; fade--)  // плавно перейдем к красному цвету
+/*
+    if (rdd!=255) // если вдруг свет тусклый
+    {
+    	for (int i=rdd; i<256; i++)
+    	{
+    		setColor(i, i, i);
+    		delay(30);
+    	}
+    }
+*/  
+    for (fade=rdd; fade>0; fade--)  // плавно перейдем к красному цвету
     {
       setColor(255, fade, fade);
       delay(20);
+      if (rdd!=255)
+      	delay(50);
       if (fade==1) // TODO костыль. fade всегда доходит только до 1, не нижее
         setColor(0, 0, 0);
     } 
@@ -379,6 +418,5 @@ void loop()
         }
     }          
   }
-
 
 
