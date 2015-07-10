@@ -17,7 +17,7 @@ int i=0; // для счетчика
 int timeSec; // время руки над датчиком
 int upTempTange=0; // для upTempTange = nowRange, для правильной работы в промежутке (topRange; maxRange)
 
-// lightMode переделана в функцию. Режим лампы в настоящий момент (0-ночник, 1 светильник, 2 радуга, 8 отключение)
+// lightMode переделана в функцию. Режим лампы в настоящий момент (1 светильник, 2 радуга, 3 ночник 8 отключение)
 byte valueRGB = 0; // яркость или оттенок (нормализованное значение nowRange)
 byte timeout = 60; // итераций чтобы выключить светильник
 byte prevValueRGB = 0; // прошлое значение яркости 
@@ -55,89 +55,60 @@ void loop()
       println("Range: ", nowRange);
     }
 
-// Если дистанция в допустимых пределах [bottomRange; topRange]
-    if ((nowRange < bottomRange - delta) && (nowRange > topRange+delta))
-    {
+// Если лампа полностью накрыта ладонью
+	if (((nowRange >= 350) && (nowRange<=700)) || ((nowRange>=1) && (nowRange<=10)))
+	{	
+		println("No4nik?", 0);
+		delay(400);
 
-      /*
+		if (((getRange() >= 250) && (getRange()<=700)) || ((getRange()>=1) && (getRange()<=10)))
+		{
+			println("Yes", 0);
+			lightMode(3); // включаем ночник
+		}
+		else
+		println("No", 0);
+	}
 
-        // Для valueRGB: 58-66 строки
-          if (nowRange > bottomRange - delta)
-            valueRGB = 0;
-          else{
-            if (prevValueRGB==0)
-              prevValueRGB = 255;
-            else
-              prevValueRGB = valueRGB;
-            valueRGB = 254 - map(nowRange, topRange, bottomRange, 0, 254); // приведение текущего значения к диапазону 0 - 254 и "переворот" 
-          }
+// Если дистанция в допустимых пределах
 
-        
-                Serial.print("prevRGB: ");
-                Serial.println(prevValueRGB);
-
-                Serial.print("valueRGB: ");
-                Serial.println(valueRGB);
-      */
-
-      timeSec = counter(); // сколько рука была над датчиком
-
-      if (lmNum==0) // если лампа выключена
-        if (timeSec>=1) // проведи рукой, чтобы ее включить
-          firstOn();
-    }
-
-// Если дистанция в пределах [topRange+5; maxRange(120)+5]; 
-    if ((nowRange < topRange-10) && (nowRange > maxRange+10)) // ? будет ли верно работать, если над датчиком нет никаких препятсвий и range = topRange+-
+    if ((nowRange >= topRange+20) && (nowRange <= 350))
     {
         upTempTange = nowRange;
-        println("We are in [topRange+5; maxRange(120)+5]", 0);
-      // Для включения радуги
-        if (lmNum==1) // если работает светильник
-        {
-          delay(1000); 
-          if ((getRange() <= upTempTange+20) && (getRange() >= upTempTange-20)) // если рука не сдвинулась за секунду
+        println("We are in cycl >> ", nowRange);
+        delay(1000); 
+          if ((getRange() <= upTempTange+10) && (getRange() >= upTempTange-10)) // если рука не сдвинулась за секунду
           {
-            println("RADUGA", 0);
-            lightMode(2); // режим радуги
+          	if (lmNum==1) // если был светильник
+          	{          
+          		println("RADUGA", getRange());
+            	lightMode(2);
+          	}
+
+          	if ((lmNum==3) || (lmNum==0)) // если был ночник или лампа выключена
+          	{
+          		println("LIGHT", 0);
+          		lightMode(1);
+          		delay(2000);
+          	}
+
           }
           else // иначе, если рука сдвинулась
           {
-            println("Hand sdvinulas, menyaem yarkost", 0);
-            // если рука сдвинулась вниз, то уменьшить яркость
-            if (getRange() > upTempTange+50)
-            {
-            	/* // TODO СДЕЛАТЬ нормальную смену яркости
-            	bool exx = false;
-            	while (exx == false)
-            	{
-	            	delay(100);
-	            	for (int i=r; i>=r-30; i--)
-	            	{
-	            		if (rdd>30)
-	            		{
-	            			setColor(i, i, i);
-	            			delay(30);
-	            		}
-	            		else
-	            			setColor(rdd, rdd, rdd);
-	            	}
-
-	            	r=i;
-            		exx == true;
-            	}
-            	*/
-            	setColor(89, 139, 99);
-            }
-
-           // brightness();
-
+            println("TROLOLO", getRange());
           }
-        }
-
-      // Для изменения яркости
-
     }
+
+/* dfgsdfgsdfg
+	if ((nowRange < 400) && (nowRange > 180))
+	{
+	  timeSec = counter(); // сколько рука была над датчиком
+
+	  if (lmNum==0) // если лампа выключена
+	    if (timeSec>=1) // проведи рукой, чтобы ее включить
+	      firstOn();
+	}
+*/
 
 } // loop{...}
 
@@ -189,31 +160,61 @@ void loop()
     } 
 
     topR = topR/i; // среднее арифметическое
-    if (topR>250) // если верхний предел слишком мал
+    if (topR>=150) // если верхний предел слишком мал
     {
-      for (i=0; i<=255; i++)
-        setColor(i, i, i);
+    	for (int i=0; i<3; i++) // помигаем красным цветом, говоря, что нужно переставить лампу
+    	{
+	      setColor(192,17,29);
+	      delay(300);
+	      setColor(0,0,0);
+	      delay(100);
+  		}
     }
     else // если все хорошо :)
       firstOn(); // #7
 
-    Serial.print("topRange: "); Serial.println(topR);
+    println("topRange", topR);
     return topR;
   }
 
 // #4. lightMode - Виды работ лампы
   void lightMode(int number)
   {
-    int fade; // для затухания в режиме 0
+    int fade=255, fadeEnd=100; // для затухания в режиме 0
+    int kaka=0;
     switch(number) 
     {
       case 1: // включен светильник
         lmNum = 1;
+        if (rdd!=255) // если вдруг свет тусклый
+		for (int i=rdd; i<255; i++)
+		{
+			setColor(i, i, i);
+			delay(30);
+		}
         break;
-      case 2: // помигать светодиодиком
+      case 2: // радуга
       lmNum = 2;
         rainbowing();
         break;
+      case 3: // ночник
+        lmNum = 3;
+      	while (((getRange() >= 200) && (getRange()<=700)) || ((getRange()>=1) && (getRange()<=10)))
+      	{
+      		if (rdd>=2)
+      		{
+      			println("RDD--", rdd);
+				rdd--;
+				setColor(rdd, rdd, rdd);
+				delay(20);
+      		}
+      		else
+      		{
+      			setColor(0,0,0);
+      			lmNum=0;
+      		}
+      	}
+      break;
       case 0: // выключение светильника
         lmNum = 0; // для индикации в других частях программы
         /*
@@ -341,16 +342,14 @@ void loop()
 	int center;
     byte rgbColour[3], fade;
     boolean exx = false;
-/*
-    if (rdd!=255) // если вдруг свет тусклый
-    {
-    	for (int i=rdd; i<256; i++)
-    	{
-    		setColor(i, i, i);
-    		delay(30);
-    	}
-    }
-*/  
+
+	if (rdd!=255) // если вдруг свет тусклый
+		for (int i=rdd; i<255; i++)
+		{
+			setColor(i, i, i);
+			delay(30);
+		}
+
     for (fade=rdd; fade>0; fade--)  // плавно перейдем к красному цвету
     {
       setColor(255, fade, fade);
@@ -381,7 +380,7 @@ void loop()
             rgbColour[incColour] += 1;
             setColor(rgbColour[0], rgbColour[1], rgbColour[2]);
 
-            if (getRange() <= topRange-20)
+            if (getRange() >= topRange+30)
             {
               	// возвращаемся к белому цвету
               	println("Go to the white", 0);
@@ -418,5 +417,12 @@ void loop()
         }
     }          
   }
-
-
+/*
+	+Добавлена цветовая подсказка, если над лампой не потолок или рассчет расстояния был неверен
+	+В очередной раз изменены диапазоны
+	+Добавлен ночник
+	+Добавлен переход в Радугу из ночника, при этом свет плавно выкручивается до максимума, а потом переходит в радугу
+	+Значительно пересмотрена структура кода и поведение лампы, к примеру
+		теперь нет ночника, и чтобы выставить яркость нужно задержать руку внизу лампы
+		светильник и радуга меняются циклически, поочередно
+*/
